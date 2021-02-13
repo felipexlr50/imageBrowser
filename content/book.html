@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='css/app.css'>
+
+</head>
+
+<body>
+
+    <div class="app" , id="app">
+        <div class="topnav" , id="topnav">
+            <a class="active" href="http://localhost:8000/index.html">Home</a>
+
+            <div class="search-container">
+                <form action="">
+                    <input type="text" placeholder="Search.." name="search" , id="search_bar">
+                    <button type="submit">Submit</button, id="search_btn">
+                </form>
+            </div>
+        </div>
+
+        <div class="img_grid" , id="img_grid"></div>
+        <div id="overlay">
+            <div id="image_overlay"></div>
+        </div>
+                
+    </div>
+
+    <script type="text/javascript" src="/eel.js"></script>
+    <script type="text/javascript" src='script/app.js'></script>
+    <script>run_book()</script>
+</body>
+
+</html>
