@@ -1,9 +1,12 @@
 import sqlite3
 import queryBuilder
-import unqlite
 import logging
 import sys
+import zlib
 
+
+DEFAULT_NAME = 'app.db'
+app_db = DEFAULT_NAME
 
 CREATE_TABLE_TAG = '''
 CREATE TABLE IF NOT EXISTS Tag(tagName text unique not null primary key)
@@ -11,7 +14,8 @@ CREATE TABLE IF NOT EXISTS Tag(tagName text unique not null primary key)
 
 CREATE_TABLE_FOLDER = '''
 CREATE TABLE IF NOT EXISTS Folder(
-    folderName text unique not null primary key,
+    id text unique not null primary key,
+    folderName text not null,
     path text unique not null,
     added_date timestamp DEFAULT CURRENT_TIMESTAMP)
 '''
@@ -40,11 +44,23 @@ HAVING COUNT(*) = {}
 
 SELECT_FOLDERS_TAGS = "SELECT * FROM tag_folder ORDER BY folderName"
 
+SELECT_LATEST_FOLDERS = '''
+SELECT * FROM Folder
+ORDER BY added_date DESC
+LIMIT 0,{}
+'''
+
+SELECT_COUNT_FOLDERS = "SELECT COUNT(*) FROM Folder"
+
+
+def set_db_name(db_name=DEFAULT_NAME):
+    app_db = db_name
+
 
 def create_connection():
     connection = None
     try:
-        connection = sqlite3.connect('app.db')
+        connection = sqlite3.connect(app_db)
     except:
         print(sys.exc_info()[0])
 
@@ -82,11 +98,33 @@ def get_folders_by_tags(*tags):
     return result
 
 
+def get_latest_folders(n=30):
+    connection = create_connection()
+    c = connection.cursor()
+
+    sqlQuerry = str(SELECT_LATEST_FOLDERS).format(n)
+
+    result = c.execute(sqlQuerry).fetchall()
+    connection.close()
+
+    return result
+
+
 def get_folders_tags():
     connection = create_connection()
     c = connection.cursor()
 
     result = c.execute(SELECT_FOLDERS_TAGS).fetchall()
+    connection.close()
+
+    return result
+
+
+def get_folder_count():
+    connection = create_connection()
+    c = connection.cursor()
+
+    result = c.execute(SELECT_COUNT_FOLDERS).fetchall()
     connection.close()
 
     return result
@@ -105,12 +143,20 @@ def insertTag(tag):
 
 def insertFolder(folder, path):
     try:
+        id = zlib.adler32(folder.encode())
         connection = create_connection()
         c = connection.cursor()
         c.execute(
-            "INSERT INTO Folder(folderName, path) VALUES('{}', '{}')".format(folder, path))
+            "INSERT INTO Folder(id, folderName, path) VALUES('{}', '{}', '{}')".format(id, folder, path))
         connection.commit()
         connection.close()
+
+    except sqlite3.OperationalError as e:
+        logging.error(e)
+
+    except sqlite3.IntegrityError as e:
+        logging.error(e)
+
     except:
         logging.error(f"Failed to insert to data base: {sys.exc_info()[0]}")
 
@@ -129,7 +175,10 @@ def insertTagFolder(tag, folder):
         logging.error(f"Failed to insert to data base: {sys.exc_info()[0]}")
 
 
-def insertSomeValues():
+def test_insert_some_values():
+
+    set_db_name('test.db')
+    create_tables()
     insertTag('tag1')
     insertTag('tag2')
     insertTag('tag3')
@@ -154,11 +203,6 @@ def insertSomeValues():
     insertTagFolder('tag4', 'folder4')
     insertTagFolder('tag2', 'folder4')
 
+    toPrint = queryBuilder.filterResults('tag2 tag4', get_folders_tags())
 
-# create_tables()
-
-# insertSomeValues()
-
-#toPrint = queryBuilder.filterResults('tag2 tag4', get_folders_tags())
-
-#toPrint2 = get_folders_by_tags(queryBuilder.filterResultsDb('tag2 tag4'))
+    toPrint2 = get_folders_by_tags(queryBuilder.filterResultsDb('tag2 tag4'))

@@ -12,11 +12,15 @@ async function run() {
 }
 
 function createImageElement(img_obj) {
-  var img_64 = img_obj[0];
-  var img_name = img_obj[1];
+  var img_64 = img_obj["img"];
+  var img_name = img_obj["name"];
+  var img_id = img_obj["id"];
+  var img_date = img_obj["date"];
+  var img_path = img_obj["path"];
 
   var img_element = document.createElement("IMG");
   var img_src = "data:image/jpeg;base64," + img_64;
+  var img_ref = "/book/" + img_id;
   img_element.setAttribute("src", img_src);
 
   var img_name_element = document.createTextNode(img_name);
@@ -26,7 +30,7 @@ function createImageElement(img_obj) {
   new_img_cover.appendChild(img_element);
   new_img_cover.appendChild(img_name_element);
   new_img_cover.onclick = function () {
-    onClickImageCover(img_name);
+    onClickImageCover(img_obj);
   };
 
   document.getElementById("img_grid").appendChild(new_img_cover);
@@ -51,10 +55,9 @@ function createBookImageElement(img_obj) {
   document.getElementById("img_grid").appendChild(new_img_cover);
 }
 
-function onClickImageCover(img_name) {
-  sessionStorage.setItem("currentBook", img_name);
-  console.log("Saving ${img_name} in storage");
-  window.location.href = "http://localhost:8000/book.html";
+function onClickImageCover(img_obj) {
+  sessionStorage.setItem("currentBook", img_obj);
+  window.location.href = "/book/" + img_obj["id"];
 }
 
 async function run_book() {
