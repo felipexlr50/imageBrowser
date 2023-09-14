@@ -1,5 +1,10 @@
 __pycache__/constant.cpython-37.pyc
 .vscode/launch.json
+.vscode/
+.vscode
 __pycache__/db_util.cpython-37.pyc
 __pycache__/image_processing.cpython-37.pyc
 __pycache__/
+temp_entries
+__pycache__
+app.log

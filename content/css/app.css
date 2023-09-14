@@ -1,5 +1,6 @@
 body {
   min-width: 600px;
+  font-family: Verdana, sans-serif;
 }
 
 .app {
@@ -19,14 +20,37 @@ body {
   display: flex;
   flex-flow: wrap;
   align-items: flex-start;
+  padding-top: 30px;
+}
+
+.img_cover {
+  flex: 0 auto;
+  /* position: relative; Create a containing block for absolute positioning */
+  padding-left: 5em;
+  padding-left: 5em;
+  padding-bottom: 30px;
+  padding-top: 5em;
+}
+
+.img_cover img {
+  max-width: 60%; /* Ensure the image scales within its container */
+  height: auto;
 }
 
 .img_box {
   float: left;
-  width: 150px;
-  height: 210px;
-  object-fit: cover;
-  padding: 10px;
+  width: 20%; /* Set the width as a percentage */
+  padding-bottom: 42%; /* Set the height as a percentage based on the image's aspect ratio (210 / 150 * 100) */
+  position: relative; /* Create a containing block for absolute positioning */
+  padding-left: 5em;
+  padding-bottom: 5em;
+
+}
+
+.img_box img {
+  width: 100%; /* Make the image take up 100% of the container's width */
+  height: 100%; /* Make the image take up 100% of the container's height */
+  object-fit: cover; /* Maintain aspect ratio and cover the container */
 }
 
 .page_num {
@@ -41,6 +65,8 @@ body {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
 }
 
 .topnav a {
@@ -158,3 +184,93 @@ body {
   transform: rotate(135deg);
   -webkit-transform: rotate(135deg);
 }
+
+.error{
+  color: brown;
+  padding: 30px;
+  align-self: center;
+  display: inline-block;
+}
+
+
+.grid-container {
+  display: flex;
+  padding: 10px;
+  align-items: flex-start;
+}
+
+.grid-container-old {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0px 0px;
+  grid-template-areas:
+    "img_cover img_cover Image-info Image-info"
+    "img_cover img_cover . .";
+}
+
+.Image img{
+  width: 300px;
+  height: auto;
+  background-size: contain;
+
+  padding-left: 30px;
+  padding-top: 10px;
+}
+
+.Image-info {
+  grid-area: Image-info;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding-left: 2em;
+}
+
+.Image-info-flex{
+  flex: 1;
+}
+
+.tags {
+  background-color: #272727;
+  border: none;
+  color: #2196f3;
+  padding: 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  border-radius: 12px;
+
+}
+
+.Image-info-manage{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: center;
+}
+
+.tagButton{
+  background-color: #2196f3;
+  border: none;
+  color: white;
+  padding:10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.tagButton input{
+  border: 1px solid #ccc;
+  background-color: #ccc;
+  height: 10px;
+  width: 100%;
+  flex-grow: 4;
+  box-sizing: border-box;
+}
+

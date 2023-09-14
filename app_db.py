@@ -3,10 +3,11 @@ import queryBuilder
 import logging
 import sys
 import zlib
+import logging
+import util
 
 
 DEFAULT_NAME = 'app.db'
-app_db = DEFAULT_NAME
 
 CREATE_TABLE_TAG = '''
 CREATE TABLE IF NOT EXISTS Tag(tagName text unique not null primary key)
@@ -30,9 +31,9 @@ CREATE TABLE IF NOT EXISTS tag_folder(
 '''
 
 SELECT_FOLDERS_BY_TAG = '''
-SELECT folderName 
+SELECT folderName
 FROM tag_folder
-WHERE folderName NOT IN 
+WHERE folderName NOT IN
  (SELECT folderName FROM tag_folder WHERE tagName IN ({}))
 INTERSECT
 SELECT folderName
@@ -44,32 +45,37 @@ HAVING COUNT(*) = {}
 
 SELECT_FOLDERS_TAGS = "SELECT * FROM tag_folder ORDER BY folderName"
 
+SELECT_FOLDER_TAGS = """SELECT tagName FROM tag_folder
+WHERE folderName = '{}'
+"""
+
 SELECT_LATEST_FOLDERS = '''
 SELECT * FROM Folder
 ORDER BY added_date DESC
 LIMIT 0,{}
 '''
 
+SELECT_FOLDER_BY_ID = """
+SELECT * FROM Folder
+WHERE id = {}
+"""
+
 SELECT_COUNT_FOLDERS = "SELECT COUNT(*) FROM Folder"
 
 
-def set_db_name(db_name=DEFAULT_NAME):
-    app_db = db_name
-
-
-def create_connection():
+def create_connection(app_db=DEFAULT_NAME):
     connection = None
     try:
         connection = sqlite3.connect(app_db)
     except:
-        print(sys.exc_info()[0])
+        logging.error(sys.exc_info()[0])
 
     finally:
         return connection
 
 
-def create_tables():
-    connection = create_connection()
+def create_tables(app_db=DEFAULT_NAME):
+    connection = create_connection(app_db)
     c = connection.cursor()
     c.execute(CREATE_TABLE_TAG)
     c.execute(CREATE_TABLE_FOLDER)
@@ -79,12 +85,14 @@ def create_tables():
     connection.close()
 
 
-def get_folders_by_tags(*tags):
-    connection = create_connection()
+def get_folders_by_tags(*tags, app_db=DEFAULT_NAME):
+    connection = create_connection(app_db)
     c = connection.cursor()
 
-    tagArray = list(map(lambda x: str("'"+str(x)+"'"), tags[0][0]))
-    negTagArray = list(map(lambda x: str("'"+str(x)+"'"), tags[0][1]))
+    tagArray = list(
+        map(lambda x: str("'"+str(util.stringToB64Safe(x))+"'"), tags[0][0]))
+    negTagArray = list(
+        map(lambda x: str("'"+str(util.stringToB64Safe(x))+"'"), tags[0][1]))
 
     tagString = ", ".join(tagArray) if len(tagArray) > 0 else ""
     negTagString = ", ".join(negTagArray) if len(negTagArray) > 0 else ""
@@ -98,8 +106,8 @@ def get_folders_by_tags(*tags):
     return result
 
 
-def get_latest_folders(n=30):
-    connection = create_connection()
+def get_latest_folders(n=30, app_db=DEFAULT_NAME):
+    connection = create_connection(app_db)
     c = connection.cursor()
 
     sqlQuerry = str(SELECT_LATEST_FOLDERS).format(n)
@@ -110,8 +118,19 @@ def get_latest_folders(n=30):
     return result
 
 
-def get_folders_tags():
-    connection = create_connection()
+def get_folder_by_id(id, app_db=DEFAULT_NAME):
+    result = {}
+    with sqlite3.connect(app_db) as connection:
+
+        cur = connection.cursor()
+        sqlQuerry = str(SELECT_FOLDER_BY_ID).format(id)
+        result = cur.execute(sqlQuerry).fetchone()
+
+    return result
+
+
+def get_folders_tags(app_db=DEFAULT_NAME):
+    connection = create_connection(app_db)
     c = connection.cursor()
 
     result = c.execute(SELECT_FOLDERS_TAGS).fetchall()
@@ -120,8 +139,19 @@ def get_folders_tags():
     return result
 
 
-def get_folder_count():
-    connection = create_connection()
+def get_folder_tags(folderName, app_db=DEFAULT_NAME):
+    logging.debug(f"Getting tags for {folderName}")
+    connection = create_connection(app_db)
+    c = connection.cursor()
+
+    result = c.execute(SELECT_FOLDER_TAGS.format(folderName)).fetchall()
+    connection.close()
+
+    return result
+
+
+def get_folder_count(app_db=DEFAULT_NAME):
+    connection = create_connection(app_db)
     c = connection.cursor()
 
     result = c.execute(SELECT_COUNT_FOLDERS).fetchall()
@@ -130,9 +160,9 @@ def get_folder_count():
     return result
 
 
-def insertTag(tag):
+def insertTag(tag, app_db=DEFAULT_NAME):
     try:
-        connection = create_connection()
+        connection = create_connection(app_db)
         c = connection.cursor()
         c.execute("INSERT INTO Tag(tagName) VALUES('{}')".format(tag))
         connection.commit()
@@ -141,10 +171,10 @@ def insertTag(tag):
         logging.error(f"Failed to insert to data base: {sys.exc_info()[0]}")
 
 
-def insertFolder(folder, path):
+def insertFolder(folder, path, app_db=DEFAULT_NAME):
     try:
         id = zlib.adler32(folder.encode())
-        connection = create_connection()
+        connection = create_connection(app_db)
         c = connection.cursor()
         c.execute(
             "INSERT INTO Folder(id, folderName, path) VALUES('{}', '{}', '{}')".format(id, folder, path))
@@ -161,9 +191,9 @@ def insertFolder(folder, path):
         logging.error(f"Failed to insert to data base: {sys.exc_info()[0]}")
 
 
-def insertTagFolder(tag, folder):
+def insertTagFolder(tag, folder, app_db=DEFAULT_NAME):
     try:
-        connection = create_connection()
+        connection = create_connection(app_db)
         c = connection.cursor()
 
         c.execute("INSERT INTO tag_folder(tagName, folderName) VALUES('{}', '{}')".format(
@@ -176,33 +206,36 @@ def insertTagFolder(tag, folder):
 
 
 def test_insert_some_values():
+    app_db = "test.db"
+    create_tables(app_db=app_db)
+    insertTag('tag1', app_db=app_db)
+    insertTag('tag2', app_db=app_db)
+    insertTag('tag3', app_db=app_db)
+    insertTag('tag4', app_db=app_db)
 
-    set_db_name('test.db')
-    create_tables()
-    insertTag('tag1')
-    insertTag('tag2')
-    insertTag('tag3')
-    insertTag('tag4')
+    insertFolder('folder1', '/path1', app_db=app_db)
+    insertFolder('folder2', '/path2', app_db=app_db)
+    insertFolder('folder3', '/path3', app_db=app_db)
+    insertFolder('folder4', '/path4', app_db=app_db)
+    insertFolder('folder5', '/path5', app_db=app_db)
 
-    insertFolder('folder1', '/path1')
-    insertFolder('folder2', '/path2')
-    insertFolder('folder3', '/path3')
-    insertFolder('folder4', '/path4')
-    insertFolder('folder5', '/path5')
+    insertTagFolder('tag1', 'folder1', app_db=app_db)
+    insertTagFolder('tag2', 'folder1', app_db=app_db)
+    insertTagFolder('tag3', 'folder1', app_db=app_db)
+    insertTagFolder('tag1', 'folder2', app_db=app_db)
+    insertTagFolder('tag4', 'folder2', app_db=app_db)
 
-    insertTagFolder('tag1', 'folder1')
-    insertTagFolder('tag2', 'folder1')
-    insertTagFolder('tag3', 'folder1')
-    insertTagFolder('tag1', 'folder2')
-    insertTagFolder('tag4', 'folder2')
+    insertTagFolder('tag1', 'folder3', app_db=app_db)
+    insertTagFolder('tag4', 'folder3', app_db=app_db)
+    insertTagFolder('tag3', 'folder3', app_db=app_db)
+    insertTagFolder('tag1', 'folder5', app_db=app_db)
+    insertTagFolder('tag4', 'folder4', app_db=app_db)
+    insertTagFolder('tag2', 'folder4', app_db=app_db)
 
-    insertTagFolder('tag1', 'folder3')
-    insertTagFolder('tag4', 'folder3')
-    insertTagFolder('tag3', 'folder3')
-    insertTagFolder('tag1', 'folder5')
-    insertTagFolder('tag4', 'folder4')
-    insertTagFolder('tag2', 'folder4')
+    # tag1(1, 2, 3, 5)  tag4(2, 3, 4)
+    query = 'tag1 -tag4'
 
-    toPrint = queryBuilder.filterResults('tag2 tag4', get_folders_tags())
+    print(get_folders_by_tags(queryBuilder.filterResultsDb(query), app_db=app_db))
 
-    toPrint2 = get_folders_by_tags(queryBuilder.filterResultsDb('tag2 tag4'))
+
+# test_insert_some_values()

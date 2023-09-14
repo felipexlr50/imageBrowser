@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title id="pageTitle"></title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='/css/app.css'>
+
+</head>
+
+<body>
+
+    <div class="app" , id="app">
+        <div class="topnav" , id="topnav">
+            <a class="active" href="/home">Home</a>
+
+            <div class="search-container">
+                <form action="">
+                    <input type="text" placeholder="Search.." name="search" id="search_bar">
+                    <button type="button" id="search_btn">Submit</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div id="imageCover"></div>
+            <div class="Image-info">
+                <div><h2 id="imageTitle"></h2></div>
+                <div class="Image-info-flex" id="imageTags">
+
+                </div>
+                <div class="Image-info-manage">
+                    <button id="tagButton" class="tagButton">Add</button>
+                    <input type="text" placeholder="Add a tag.." id="tagField">
+                </div>
+            </div>
+        </div>
+
+        <div class="img_grid" , id="img_grid"></div>
+        <div id="overlay">
+            <div id="image_overlay"></div>
+        </div>
+
+    </div>
+
+
+    <script type="text/javascript" src='/script/book.js'></script>
+    <script>
+        run_book()
+    </script>
+</body>
+
+</html>
